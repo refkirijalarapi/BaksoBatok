@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Warung Bakso Batok — Kasir Antrian</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--cyan-950:#06303a;--cyan-800:#0b5563;--cyan-700:#0d6e7e;--cyan-600:#0f8a9b;--cyan-500:#19b0c2;--cyan-200:#b7ecf2;--cyan-100:#d8f4f7;--cyan-50:#eef7f7;--white:#fff;--ink:#0d2b31;--line:#d3e6e8;--mute:#5d8189;--noodle:#f6c445;--chili:#d8432c;--r:14px;--hh:64px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:var(--cyan-50);color:var(--ink);font-variant-numeric:tabular-nums;padding-bottom:calc(88px + env(safe-area-inset-bottom))}
+h1,h2,h3{font-family:'Bricolage Grotesque','Plus Jakarta Sans',sans-serif;margin:0}
+button{font-family:inherit;cursor:pointer}
+button:focus-visible,.chip:focus-within{outline:3px solid var(--cyan-500);outline-offset:2px}
+/* header + antrian */
+.top{position:sticky;top:0;z-index:30;height:var(--hh);background:var(--cyan-950);color:#fff;display:flex;align-items:center;gap:10px;padding:0 12px}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.bowl{width:38px;height:38px;border-radius:50%;background:#fff;display:grid;place-items:center;font-size:20px;flex:none}
+.brand-t,#lastQueue,.long{display:none}
+.brand h1{font-size:18px;font-weight:700;white-space:nowrap}
+.brand p{margin:0;font-size:12px;opacity:.7}
+.queue{margin-left:auto;display:flex;align-items:center;gap:10px}
+.q-num{display:flex;align-items:baseline;gap:7px;line-height:1}
+.q-num small{font-size:11.5px;opacity:.75}
+.q-num b{font-family:'Bricolage Grotesque',sans-serif;font-size:40px;font-weight:800;color:var(--noodle);letter-spacing:-1px}
+.btn-new{height:44px;padding:0 16px;border:0;border-radius:12px;background:var(--noodle);color:var(--cyan-950);font-weight:800;font-size:14px}
+.btn-new:active{transform:scale(.97)}
+.gear{width:44px;height:44px;flex:none;border-radius:12px;border:1px solid rgba(255,255,255,.3);background:transparent;color:#fff;font-size:20px}
+/* tab menu (mobile) */
+.tabs{position:sticky;top:var(--hh);z-index:20;display:flex;gap:6px;padding:10px 12px;background:var(--cyan-50)}
+.tabs button{flex:1;height:44px;border:1.5px solid var(--line);background:#fff;border-radius:12px;font-weight:700;font-size:14.5px;color:var(--cyan-800)}
+.tabs button.on{background:var(--cyan-700);border-color:var(--cyan-700);color:#fff}
+.layout{max-width:1320px;margin:0 auto;padding:2px 12px 16px}
+.menu-sec{display:none}.menu-sec.active{display:block}
+.menu-sec>h2{font-size:21px;margin:6px 2px 2px}
+.sub{font-size:13px;color:var(--mute);margin:0 2px 12px}
+.comp{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.c-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:12px}
+.c-head h3{font-size:19px}.price{font-weight:800;color:var(--cyan-700)}
+.toppings{display:flex;flex-wrap:wrap;gap:8px}
+.chip{position:relative;display:flex;align-items:center;gap:7px;min-height:44px;padding:0 14px;border:1.5px solid var(--line);background:var(--cyan-50);border-radius:999px;font-size:14px;font-weight:600;user-select:none;cursor:pointer}
+.chip input{position:absolute;opacity:0;pointer-events:none}
+.chip em{font-style:normal;font-size:12px;color:var(--cyan-700);font-weight:700}
+.chip.checked{background:var(--noodle);border-color:#d9a91e;color:var(--cyan-950)}
+.chip.checked em{color:var(--cyan-950)}
+.chip.checked::before{content:"✓";font-weight:800}
+.c-foot{display:flex;gap:10px;margin-top:14px}
+.stepper{display:flex;align-items:center;border:1.5px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}
+.stepper button{width:44px;height:44px;border:0;background:var(--cyan-50);font-size:22px;font-weight:700;color:var(--cyan-700)}
+.stepper span{min-width:36px;text-align:center;font-weight:800;font-size:16px}
+.stepper.sm button{width:36px;height:36px;font-size:18px}.stepper.sm span{min-width:30px;font-size:14px}
+.btn-add{flex:1;height:46px;border:0;border-radius:12px;background:var(--cyan-700);color:#fff;font-weight:700;font-size:15px;display:flex;justify-content:space-between;align-items:center;padding:0 16px}
+.btn-add:active{background:var(--cyan-800)}
+.tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.tile{position:relative;min-height:84px;text-align:left;padding:12px 14px;border:1.5px solid var(--line);background:#fff;border-radius:var(--r);display:flex;flex-direction:column;justify-content:space-between;gap:6px;color:var(--ink);font-size:15px}
+.tile:active{background:var(--cyan-100)}
+.t-name{font-weight:700}
+.badge{position:absolute;top:-8px;right:-6px;min-width:26px;height:26px;padding:0 7px;border-radius:13px;background:var(--chili);color:#fff;font-size:13px;font-weight:800;display:grid;place-items:center}
+.badge[hidden]{display:none}
+/* panel pesanan: bottom sheet di HP, kolom tetap di layar lebar */
+.panel{position:fixed;left:0;right:0;bottom:0;z-index:45;max-height:88dvh;background:#fff;border-radius:20px 20px 0 0;display:flex;flex-direction:column;transform:translateY(105%);transition:transform .25s ease;box-shadow:0 -10px 40px rgba(6,48,58,.3)}
+.panel.open{transform:none}
+.panel-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 8px}
+.panel-head h2{font-size:20px}
+.close-sheet{width:40px;height:40px;border:0;border-radius:50%;background:var(--cyan-50);font-size:18px;color:var(--mute)}
+.p-name{padding:0 16px 8px}
+.p-name input{width:100%;height:44px;border:1.5px solid var(--line);border-radius:12px;padding:0 14px;font:inherit;font-size:16px}
+.order-list{flex:1;overflow-y:auto;padding:0 16px;min-height:96px}
+.line{display:flex;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px dashed var(--line)}
+.l-name{font-weight:700;font-size:15px}.l-detail{font-size:12.5px;color:var(--mute);margin-top:2px}
+.l-main .stepper{margin-top:8px;width:max-content}
+.l-price{font-weight:800;white-space:nowrap}
+.order-empty{text-align:center;color:var(--mute);font-size:14px;padding:28px 0;line-height:1.5}
+.p-foot{padding:12px 16px calc(14px + env(safe-area-inset-bottom));border-top:2px solid var(--cyan-950)}
+.total-row{display:flex;justify-content:space-between;align-items:baseline}
+.total-row .lbl{font-weight:700;color:var(--cyan-800)}
+.total-row .val{font-family:'Bricolage Grotesque',sans-serif;font-size:32px;font-weight:800}
+.hint{font-size:12.5px;color:var(--chili);font-weight:600;margin:4px 0 0}
+.hint:empty{display:none}
+.action-row{display:flex;gap:10px;margin-top:12px}
+.action-row button{flex:1;height:52px;border-radius:12px;font-weight:800;font-size:15px;border:0}
+.btn-print{background:var(--cyan-950);color:#fff}
+.btn-print:disabled{background:#c5d6d8;cursor:not-allowed}
+.btn-clear{background:#fff;color:var(--cyan-700);border:1.5px solid var(--line)!important}
+.p-foot .btn-print{flex:2}
+.hint-small{font-size:11.5px;line-height:1.4;opacity:.8}
+.backdrop{position:fixed;inset:0;background:rgba(6,48,58,.5);z-index:40;opacity:0;pointer-events:none;transition:opacity .2s}
+.backdrop.open{opacity:1;pointer-events:auto}
+.cartbar{position:fixed;left:0;right:0;bottom:0;z-index:35;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:linear-gradient(transparent,var(--cyan-50) 35%)}
+.cartbar>button{width:100%;height:58px;border:0;border-radius:16px;background:var(--cyan-950);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 18px;font-weight:700;font-size:15px}
+.c-count{display:inline-grid;place-items:center;min-width:28px;height:28px;margin-right:10px;border-radius:999px;background:var(--noodle);color:var(--cyan-950);font-weight:800}
+.cartbar b{font-family:'Bricolage Grotesque',sans-serif;font-size:21px}
+.toast{position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom));transform:translate(-50%,10px);background:var(--ink);color:#fff;padding:9px 16px;border-radius:999px;font-size:13.5px;font-weight:600;opacity:0;pointer-events:none;transition:.2s;z-index:70;white-space:nowrap}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media(min-width:480px){.long{display:inline}.tiles{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:640px){.brand-t,#lastQueue{display:block}#lastQueue{display:inline}}
+@media(min-width:900px){
+  :root{--hh:72px}
+  body{padding-bottom:24px}
+  .tabs,.cartbar,.backdrop,.close-sheet{display:none}
+  .layout{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:20px;padding:20px;align-items:start}
+  .menu-sec{display:block;margin-bottom:22px}
+  .tiles{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+  .panel{position:sticky;top:calc(var(--hh) + 16px);z-index:1;transform:none;max-height:calc(100dvh - var(--hh) - 32px);border-radius:var(--r);border:1px solid var(--line);box-shadow:none}
+  .toast{bottom:28px}
+}
+@media(min-width:1180px){.duo{display:grid;grid-template-columns:1fr 1fr;gap:16px}}
+@media(max-width:700px){.setting-row input,.setting-row select{font-size:16px!important}.setting-row input{min-width:0}.modal,.preview-modal{padding:16px}}
+.pv-tabs{display:flex;gap:6px;margin:4px 0 6px}.pv-tabs button{flex:1;height:42px;border:1.5px solid var(--line);background:#fff;border-radius:12px;font-weight:700;font-size:14px;color:var(--cyan-800)}.pv-tabs button.on{background:var(--cyan-700);border-color:var(--cyan-700);color:#fff}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+  /* ---------- Settings modal ---------- */
+  .overlay{position:fixed;inset:0;background:rgba(5,51,64,.55);display:none;align-items:flex-start;justify-content:center;padding:30px 14px;overflow-y:auto;z-index:50;}
+  .overlay.open{display:flex;}
+  .modal{background:var(--white);border-radius:16px;max-width:640px;width:100%;padding:22px;margin-bottom:40px;}
+  .modal h2{margin-top:0;color:var(--cyan-800);}
+  .modal .close-x{float:right;background:none;border:none;font-size:20px;cursor:pointer;color:#5a8b93;}
+  .settings-section{margin-bottom:22px;}
+  .settings-section h3{font-size:14px;color:var(--cyan-700);margin-bottom:8px;border-bottom:1px solid var(--line);padding-bottom:6px;}
+  .setting-row{display:flex;gap:8px;align-items:center;margin-bottom:8px;}
+  .setting-row input[type=text]{flex:1;padding:7px 9px;border:1px solid var(--line);border-radius:7px;font-size:13.5px;}
+  .setting-row input[type=number]{width:90px;padding:7px 9px;border:1px solid var(--line);border-radius:7px;font-size:13.5px;font-family:'Space Mono',monospace;}
+  .setting-row button.del{background:none;border:none;color:#c94848;cursor:pointer;font-size:16px;}
+  .add-row{background:var(--cyan-50);border:1px dashed var(--cyan-500);color:var(--cyan-700);padding:7px 12px;border-radius:8px;font-size:13px;cursor:pointer;font-weight:600;width:100%;margin-top:4px;}
+
+  /* ---------- Receipt look (shared by preview + print) ---------- */
+  .rl-center{text-align:center;}
+  .rl-line{border-top:1px dashed #000;margin:6px 0;}
+  .rl-row{display:flex;justify-content:space-between;gap:8px;}
+  .rl-shop{font-size:14px;font-weight:700;letter-spacing:.3px;}
+  .rl-sub{font-size:9.5px;color:#333;padding-left:6px;}
+  .rl-cut{text-align:center;font-size:10px;letter-spacing:1px;margin:16px 0;color:#555;}
+  .rl-label{text-align:center;font-weight:700;font-size:12.5px;letter-spacing:.3px;}
+  .rl-sublabel{text-align:center;font-size:10px;color:#333;margin-bottom:2px;}
+
+  /* Preview modal — visible on screen, mimics thermal paper */
+  .preview-overlay{position:fixed;inset:0;background:rgba(5,51,64,.55);display:none;align-items:flex-start;justify-content:center;padding:30px 14px;overflow-y:auto;z-index:60;}
+  .preview-overlay.open{display:flex;}
+  .preview-modal{background:var(--cyan-50);border-radius:16px;max-width:400px;width:100%;padding:20px;margin-bottom:40px;text-align:center;}
+  .preview-modal h2{margin-top:0;color:var(--cyan-800);font-size:16px;}
+  .preview-modal .close-x{float:right;background:none;border:none;font-size:20px;cursor:pointer;color:#5a8b93;}
+  .receipt-sheet{
+    background:#fff;border-radius:4px;padding:16px 14px;text-align:left;
+    font-family:'Space Mono',monospace;color:#111;font-size:11.5px;
+    max-width:260px;margin:14px auto;box-shadow:0 6px 18px rgba(5,51,64,.18);
+  }
+  .preview-actions{display:flex;gap:10px;margin-top:6px;}
+  .preview-actions button{flex:1;padding:11px;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;border:none;}
+  .btn-print-now{background:var(--cyan-600);color:var(--white);}
+  .btn-print-now:hover{background:var(--cyan-700);}
+  .btn-back{background:var(--white);color:var(--cyan-700);border:1px solid var(--line) !important;}
+
+  /* ---------- Actual printable receipt (hidden on screen, only for window.print) ---------- */
+  #receipt{display:none;}
+  @media print{
+    body *{visibility:hidden;}
+    #receipt, #receipt *{visibility:visible;}
+    #receipt{
+      display:block;position:absolute;top:0;left:0;width:58mm;
+      font-family:'Space Mono',monospace;font-size:11px;color:#000;padding:4mm;
+    }
+    @page{margin:0;}
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><div class="bowl">🍜</div><div class="brand-t"><h1>Warung Bakso Batok</h1><p>Kasir &amp; antrian</p></div></div>
+  <div class="queue">
+    <div class="q-num"><small>Antrian</small><b id="queueNum">00</b><small id="lastQueue"></small></div>
+    <button class="btn-new" onclick="takeNewQueue()">+ <span class="long">Pelanggan&nbsp;</span>baru</button>
+  </div>
+  <button class="gear" onclick="openSettings()" aria-label="Pengaturan menu">⚙</button>
+</header>
+<nav class="tabs">
+  <button class="on" data-t="bakso" onclick="showTab('bakso')">Bakso</button>
+  <button data-t="mieayam" onclick="showTab('mieayam')">Mie Ayam</button>
+  <button data-t="lainnya" onclick="showTab('lainnya')">Lainnya</button>
+</nav>
+<main class="layout">
+  <div class="menu">
+    <div class="duo">
+      <section class="menu-sec active" data-sec="bakso"><h2>Bakso</h2><p class="sub">Pilih topping, harga langsung terjumlah.</p><div class="comp" id="menu-bakso"></div></section>
+      <section class="menu-sec" data-sec="mieayam"><h2>Mie Ayam</h2><p class="sub">Bisa ditambah topping bakso.</p><div class="comp" id="menu-mieayam"></div></section>
+    </div>
+    <section class="menu-sec" data-sec="lainnya"><h2>Menu Lainnya</h2><p class="sub">Ketuk sekali untuk menambah satu porsi.</p><div class="tiles" id="menu-lainnya"></div></section>
+  </div>
+  <aside class="panel" id="orderPanel" aria-label="Pesanan">
+    <div class="panel-head"><h2>Pesanan</h2><button class="close-sheet" onclick="closeSheet()" aria-label="Tutup">✕</button></div>
+    <div class="p-name"><input type="text" id="custName" placeholder="Nama pelanggan (opsional)" autocomplete="off"></div>
+    <div class="order-list" id="orderList"></div>
+    <div class="p-foot">
+      <div class="total-row"><span class="lbl">Total</span><span class="val" id="totalVal">Rp0</span></div>
+      <p class="hint" id="printHint"></p>
+      <div class="action-row">
+        <button class="btn-clear" onclick="clearOrder()">Bersihkan</button>
+        <button class="btn-print" id="printBtn" onclick="openPrintPreview()" disabled>🖨 Cetak struk</button>
+      </div>
+    </div>
+  </aside>
+</main>
+<div class="backdrop" id="sheetBackdrop" onclick="closeSheet()"></div>
+<div class="cartbar"><button onclick="openSheet()"><span><span class="c-count" id="cartCount">0</span>Lihat pesanan</span><b id="cartTotal">Rp0</b></button></div>
+<div class="toast" id="toast"></div>
+
+<!-- SETTINGS MODAL -->
+<div class="overlay" id="settingsOverlay">
+  <div class="modal">
+    <button class="close-x" onclick="closeSettings()">✕</button>
+    <h2>Pengaturan Menu &amp; Harga</h2>
+    <div id="settingsBody"></div>
+    <div class="action-row" style="margin-top:10px;">
+      <button class="btn-print" style="flex:1" onclick="saveSettingsAndClose()">💾 Simpan Pengaturan</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM DIALOG (custom, pengganti window.confirm agar pasti jalan di semua browser/HP) -->
+<!-- INFO MESSAGE DIALOG (pengganti alert() agar pasti muncul di semua browser/HP) -->
+<div class="overlay" id="msgOverlay">
+  <div class="modal" style="max-width:340px;text-align:center;">
+    <p id="msgText" style="font-size:14px;color:var(--ink);line-height:1.5;"></p>
+    <button class="btn-print" style="width:100%;padding:11px;border-radius:10px;" onclick="closeMessage()">OK</button>
+  </div>
+</div>
+
+<div class="overlay" id="confirmOverlay">
+  <div class="modal" style="max-width:360px;text-align:center;">
+    <p id="confirmMsg" style="font-size:14.5px;color:var(--ink);line-height:1.5;"></p>
+    <div class="action-row">
+      <button class="btn-clear" onclick="closeConfirm(false)">Batal</button>
+      <button class="btn-print" onclick="closeConfirm(true)">Ya, Lanjutkan</button>
+    </div>
+  </div>
+</div>
+
+<!-- PREVIEW MODAL — muncul sebelum benar-benar cetak -->
+<div class="preview-overlay" id="previewOverlay">
+  <div class="preview-modal">
+    <button class="close-x" onclick="closePreview()">✕</button>
+    <h2>Preview Struk</h2>
+    <div class="pv-tabs"><button class="on" data-t="customer" onclick="setPreviewType('customer')">Customer</button><button data-t="kitchen" onclick="setPreviewType('kitchen')">Dapur</button></div>
+    <div class="receipt-sheet" id="previewSheet"></div>
+    <div class="preview-actions">
+      <button class="btn-back" onclick="closePreview()">← Kembali</button>
+      <button class="btn-print-now" id="printNowBtn" onclick="confirmPrint()">🖨 Cetak</button>
+    </div>
+  </div>
+</div>
+
+<!-- PRINTABLE RECEIPT (dipakai browser saat benar-benar mencetak) -->
+<div id="receipt">
+  <div id="printSheet"></div>
+</div>
+
+<script>
+/* ============ DEFAULT CONFIG ============ */
+const DEFAULT_CONFIG = {
+  bakso: {
+    name: "Bakso", price: 10000,
+    toppings: [
+      {name:"Tulang", price:5000},
+      {name:"Mie Putih", price:2000},
+      {name:"Mie Kuning Telur", price:2000},
+      {name:"Mie Kuning Basah", price:2000},
+      {name:"Toge", price:0},
+      {name:"Sawi", price:0}
+    ]
+  },
+  mieayam: {
+    name: "Mie Ayam", price: 10000,
+    toppings: [
+      {name:"Bakso", price:3000},
+      {name:"Bakso Tulang", price:5000}
+    ]
+  },
+  lainnya: [
+    {name:"SOP Tulang", price:15000},
+    {name:"Es Jeruk", price:5000},
+    {name:"Es Teh Manis", price:4000},
+    {name:"Teh Manis Hangat", price:3000},
+    {name:"Kerupuk", price:2000}
+  ],
+  shopName: "WARUNG BAKSO BATOK",
+  shopAddress: "KP.Sukasari, Cibogohilir, Kec.Plered, Kabupaten Purwakarta, Jawa Barat 41162",
+  printer: {
+    paperWidth: 58,      // 58 atau 80 (mm)
+    autoCut: false,      // true jika printer punya pemotong kertas otomatis
+    useBluetooth: true   // true = coba cetak langsung ke printer Bluetooth dulu
+  }
+};
+
+const STORAGE_KEY = "baksoBatok_config_v1";
+const QUEUE_KEY = "baksoBatok_queue_v1";
+
+let config = loadConfig();
+let order = []; // {id, label, detail, price, qty}
+let orderIdSeq = 1;
+let currentQueueNumber = null;
+
+function loadConfig(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      // jaga kompatibilitas dengan data lama yang belum punya pengaturan printer
+      if(!parsed.printer) parsed.printer = JSON.parse(JSON.stringify(DEFAULT_CONFIG.printer));
+      return parsed;
+    }
+  }catch(e){}
+  return JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+}
+function saveConfig(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+}
+function rupiah(n){
+  return "Rp" + Number(n).toLocaleString("id-ID");
+}
+
+/* ============ QUEUE NUMBER ============ */
+function todayStr(){
+  const d = new Date();
+  return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();
+}
+function loadQueueState(){
+  try{
+    const raw = localStorage.getItem(QUEUE_KEY);
+    if(raw){
+      const q = JSON.parse(raw);
+      if(q.date === todayStr()) return q;
+    }
+  }catch(e){}
+  return {date: todayStr(), counter: 0};
+}
+
+const $ = id => document.getElementById(id);
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+let toastT;
+function toast(msg){const t=$("toast");t.textContent=msg;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),1300);}
+function showTab(k){
+  document.querySelectorAll(".menu-sec").forEach(s=>s.classList.toggle("active",s.dataset.sec===k));
+  document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("on",b.dataset.t===k));
+}
+function openSheet(){$("orderPanel").classList.add("open");$("sheetBackdrop").classList.add("open");}
+function closeSheet(){$("orderPanel").classList.remove("open");$("sheetBackdrop").classList.remove("open");}
+
+/* ============ QUEUE NUMBER ============ */
+function updateQueueUI(){
+  const q = loadQueueState();
+  $("queueNum").textContent = String(currentQueueNumber!==null ? currentQueueNumber : q.counter+1).padStart(2,"0");
+  $("lastQueue").textContent = "";
+}
+function assignQueue(){
+  const q = loadQueueState();
+  q.counter += 1;
+  localStorage.setItem(QUEUE_KEY, JSON.stringify(q));
+  currentQueueNumber = q.counter;
+  updateQueueUI();
+  return q;
+}
+function takeNewQueue(){
+  const q = assignQueue();
+  order = [];
+  $("custName").value = "";
+  updateQueueUI(); renderOrder(); closeSheet();
+  toast("Antrian " + String(q.counter).padStart(2,"0") + " siap");
+}
+
+/* ============ MENU: BAKSO & MIE AYAM ============ */
+const qtyState = {bakso:1, mieayam:1};
+function renderComposed(key){
+  const cfg = config[key];
+  $("menu-"+key).innerHTML = `
+    <div class="c-head"><h3>${esc(cfg.name)}</h3><span class="price">${rupiah(cfg.price)}</span></div>
+    <div class="toppings" id="${key}-toppings">
+      ${cfg.toppings.map((t,i)=>`
+        <label class="chip" data-idx="${i}">
+          <input type="checkbox" onchange="toggleChip(this,'${key}')">
+          <span>${esc(t.name)}</span><em>${t.price>0?'+'+rupiah(t.price):'gratis'}</em>
+        </label>`).join("")}
+    </div>
+    <div class="c-foot">
+      <div class="stepper">
+        <button onclick="stepQty('${key}',-1)" aria-label="Kurangi">−</button>
+        <span id="${key}-qty">${qtyState[key]}</span>
+        <button onclick="stepQty('${key}',1)" aria-label="Tambah">+</button>
+      </div>
+      <button class="btn-add" id="${key}-add" onclick="addComposedItem('${key}')"></button>
+    </div>`;
+  updateAddLabel(key);
+}
+function renderBaksoMenu(){renderComposed("bakso");}
+function renderMieAyamMenu(){renderComposed("mieayam");}
+function selectedToppings(key){
+  const cfg = config[key], names = []; let sum = 0;
+  document.querySelectorAll(`#${key}-toppings .chip`).forEach(chip=>{
+    if(chip.querySelector("input").checked){const t=cfg.toppings[chip.dataset.idx];names.push(t.name);sum+=t.price;}
+  });
+  return {names,sum};
+}
+function updateAddLabel(key){
+  const s = selectedToppings(key);
+  $(key+"-add").innerHTML = `<span>Tambah</span><span>${rupiah((config[key].price+s.sum)*qtyState[key])}</span>`;
+}
+function toggleChip(input,key){
+  input.closest(".chip").classList.toggle("checked", input.checked);
+  updateAddLabel(key);
+}
+function stepQty(key, d){
+  qtyState[key] = Math.max(1, qtyState[key]+d);
+  $(key+"-qty").textContent = qtyState[key];
+  updateAddLabel(key);
+}
+function pushOrder(label, detail, unitPrice, qty){
+  if(currentQueueNumber===null) assignQueue();
+  const ex = order.find(o=>o.label===label && o.detail===detail && o.unitPrice===unitPrice);
+  if(ex) ex.qty += qty; else order.push({id:orderIdSeq++, label, detail, unitPrice, qty});
+  renderOrder();
+  toast("+" + qty + " " + label);
+}
+function addComposedItem(key){
+  const cfg = config[key], s = selectedToppings(key);
+  pushOrder(cfg.name, s.names.length ? "+ "+s.names.join(", ") : "", cfg.price+s.sum, qtyState[key]);
+  document.querySelectorAll(`#${key}-toppings .chip`).forEach(c=>{c.querySelector("input").checked=false;c.classList.remove("checked");});
+  qtyState[key] = 1;
+  $(key+"-qty").textContent = 1;
+  updateAddLabel(key);
+}
+
+/* ============ MENU: LAINNYA (satu ketukan = tambah 1) ============ */
+function renderLainnyaMenu(){
+  $("menu-lainnya").innerHTML = config.lainnya.map((it,i)=>`
+    <button class="tile" onclick="addLainnya(${i})">
+      <span class="t-name">${esc(it.name)}</span><span class="price">${rupiah(it.price)}</span>
+      <b class="badge" id="badge-${i}" hidden></b>
+    </button>`).join("");
+  updateBadges();
+}
+function addLainnya(i){const it=config.lainnya[i]; pushOrder(it.name,"",it.price,1);}
+function updateBadges(){
+  config.lainnya.forEach((it,i)=>{
+    const b = $("badge-"+i); if(!b) return;
+    const q = order.filter(o=>o.label===it.name && !o.detail).reduce((s,o)=>s+o.qty,0);
+    b.textContent = q || ""; b.hidden = !q;
+  });
+}
+
+/* ============ ORDER LIST ============ */
+function renderOrder(){
+  $("orderList").innerHTML = order.length ? order.map(o=>`
+    <div class="line">
+      <div class="l-main">
+        <div class="l-name">${esc(o.label)}</div>
+        ${o.detail?`<div class="l-detail">${esc(o.detail)}</div>`:""}
+        <div class="stepper sm">
+          <button onclick="changeQty(${o.id},-1)" aria-label="Kurangi">−</button>
+          <span>${o.qty}</span>
+          <button onclick="changeQty(${o.id},1)" aria-label="Tambah">+</button>
+        </div>
+      </div>
+      <div class="l-price">${rupiah(o.unitPrice*o.qty)}</div>
+    </div>`).join("") : `<div class="order-empty">Belum ada pesanan.<br>Ketuk menu untuk menambah.</div>`;
+  const total = order.reduce((s,o)=>s+o.unitPrice*o.qty,0);
+  const count = order.reduce((s,o)=>s+o.qty,0);
+  $("totalVal").textContent = rupiah(total);
+  $("cartTotal").textContent = rupiah(total);
+  $("cartCount").textContent = count;
+  $("printBtn").disabled = order.length===0;
+  $("printHint").textContent = "";
+  updateBadges();
+}
+function changeQty(id, d){
+  const o = order.find(x=>x.id===id); if(!o) return;
+  o.qty += d;
+  if(o.qty<=0) order = order.filter(x=>x.id!==id);
+  renderOrder();
+}
+function clearOrder(){
+  if(!order.length) return;
+  showConfirm("Hapus semua pesanan untuk pelanggan ini?", function(){ order = []; renderOrder(); });
+}
+
+/* ============ PRINT PREVIEW & PRINT (2 struk: pelanggan + catatan dapur) ============ */
+function computeReceiptData(){
+  const name = document.getElementById("custName").value.trim();
+  const now = new Date();
+  const dateStr = now.toLocaleDateString("id-ID") + " " + now.toLocaleTimeString("id-ID",{hour:'2-digit',minute:'2-digit'});
+  const itemsHtml = order.map(o=>`
+    <div class="rl-row"><span>${o.qty}x ${esc(o.label)}</span><span>${rupiah(o.unitPrice*o.qty)}</span></div>
+    ${o.detail?`<div class="rl-sub">${esc(o.detail)}</div>`:""}
+  `).join("");
+  const kitchenItemsHtml = order.map(o=>`
+    <div class="rl-row" style="font-weight:700;font-size:12.5px;"><span>${o.qty}x ${esc(o.label)}</span></div>
+    ${o.detail?`<div class="rl-sub" style="font-size:10.5px;">${esc(o.detail)}</div>`:""}
+  `).join("");
+  const total = order.reduce((s,o)=>s+o.unitPrice*o.qty,0);
+  return {
+    shop: config.shopName,
+    addr: config.shopAddress,
+    queue: String(currentQueueNumber).padStart(2,"0"),
+    name: name || "-",
+    date: dateStr,
+    itemsHtml,
+    kitchenItemsHtml,
+    total: rupiah(total)
+  };
+}
+let previewType = "customer";
+function buildReceiptHTML(data, type){
+  if(type==="kitchen"){
+    return `
+    <div class="rl-label">CATATAN DAPUR</div>
+    <div class="rl-sublabel">Siapkan Pesanan</div>
+    <div class="rl-line"></div>
+    <div class="rl-row"><span>No. Antrian</span><span style="font-weight:700;font-size:14px;">${data.queue}</span></div>
+    <div class="rl-row"><span>Nama</span><span>${esc(data.name)}</span></div>
+    <div class="rl-line"></div>
+    ${data.kitchenItemsHtml}
+    <div class="rl-line"></div>
+    <div class="rl-row" style="font-weight:700;font-size:13px;"><span>TOTAL</span><span>${data.total}</span></div>
+    <div class="rl-line"></div>`;
+  }
+  return `
+    <div class="rl-center rl-shop">${esc(data.shop)}</div>
+    <div class="rl-center">${esc(data.addr)}</div>
+    <div class="rl-line"></div>
+    <div class="rl-row"><span>No. Antrian</span><span style="font-weight:700;font-size:14px;">${data.queue}</span></div>
+    <div class="rl-row"><span>Nama</span><span>${esc(data.name)}</span></div>
+    <div class="rl-row"><span>Tanggal</span><span>${data.date}</span></div>
+    <div class="rl-line"></div>
+    ${data.itemsHtml}
+    <div class="rl-line"></div>
+    <div class="rl-row" style="font-weight:700;font-size:13px;"><span>TOTAL</span><span>${data.total}</span></div>
+    <div class="rl-line"></div>
+    <div class="rl-center">Terima kasih!</div>`;
+}
+function setPreviewType(t){
+  previewType = t;
+  document.querySelectorAll(".pv-tabs button").forEach(b=>b.classList.toggle("on", b.dataset.t===t));
+  document.getElementById("previewSheet").innerHTML = buildReceiptHTML(computeReceiptData(), t);
+  document.getElementById("printNowBtn").textContent = t==="kitchen" ? "🖨 Cetak Struk Dapur" : "🖨 Cetak Struk Customer";
+}
+function openPrintPreview(){
+  if(order.length===0) return;
+  setPreviewType(previewType);
+  document.getElementById("previewOverlay").classList.add("open");
+}
+function closePreview(){
+  document.getElementById("previewOverlay").classList.remove("open");
+}
+async function confirmPrint(){
+  const data = computeReceiptData();
+  const type = previewType;
+  const nama = type==="kitchen" ? "Struk dapur" : "Struk customer";
+  if(config.printer.useBluetooth && 'bluetooth' in navigator && (btDevice || btConnected)){
+    if(!(await ensurePrinter())){
+      showMessage("Printer terputus dan gagal tersambung ulang. Nyalakan printer lalu coba lagi, atau sambungkan ulang di Pengaturan.");
+      return;
+    }
+    try{
+      await sendToBluetoothPrinter(data, type);
+      toast(nama + " terkirim ke printer");
+    }catch(err){
+      showMessage("Gagal mengirim ke printer (" + err.message + "). Cek printer lalu coba cetak lagi.");
+    }
+    return;
+  }
+  if(config.printer.useRawBT !== false){
+    printViaRawBT(data, type);
+    toast(nama + " dikirim ke RawBT");
+    return;
+  }
+  document.getElementById("printSheet").innerHTML = buildReceiptHTML(data, type);
+  document.getElementById("receipt").style.width = config.printer.paperWidth + "mm";
+  window.print();
+}
+
+/* ============ PRINTER BLUETOOTH (ESC/POS via Web Bluetooth) ============ */
+let btDevice = null;
+let btCharacteristic = null;
+let btConnected = false;
+
+// Daftar UUID service yang umum dipakai printer thermal Bluetooth murah (58mm/80mm).
+// Web Bluetooth wajib tahu daftar service di awal (tidak bisa akses sembarang service).
+const PRINTER_SERVICE_UUIDS = [
+  '000018f0-0000-1000-8000-00805f9b34fb',
+  '0000ff00-0000-1000-8000-00805f9b34fb',
+  '0000ffe0-0000-1000-8000-00805f9b34fb',
+  '0000fff0-0000-1000-8000-00805f9b34fb',
+  '0000ae30-0000-1000-8000-00805f9b34fb',
+  '49535343-fe7d-4ae5-8fa9-9fafd205e455',
+  'e7810a71-73ae-499d-8c15-faa9aef0c3f2',
+  '0000ffe5-0000-1000-8000-00805f9b34fb',
+  '0000fee7-0000-1000-8000-00805f9b34fb',
+  'bef8d6c9-9c21-4c9e-b632-bd58c1009f9f'
+];
+
+function updatePrinterStatus(){
+  const el = document.getElementById("printerStatusText");
+  if(!el) return;
+  if(!('bluetooth' in navigator)){
+    el.textContent = "⚠ Bluetooth Web API tidak tersedia di browser/perangkat ini (biasanya karena iPhone/Safari, atau halaman dibuka dari file lokal bukan https).";
+    return;
+  }
+  if(btConnected && btDevice){
+    el.textContent = "✅ Terhubung ke: " + (btDevice.name || "Printer Bluetooth");
+  }else{
+    el.textContent = "Belum terhubung ke printer manapun.";
+  }
+}
+async function attachPrinter(device){
+  const server = await device.gatt.connect();
+  const services = await server.getPrimaryServices();
+  let foundChar = null;
+  for(const service of services){
+    try{
+      const chars = await service.getCharacteristics();
+      for(const ch of chars){
+        if(ch.properties.write || ch.properties.writeWithoutResponse){ foundChar = ch; break; }
+      }
+    }catch(e){ /* lewati service yang tidak bisa dibaca */ }
+    if(foundChar) break;
+  }
+  if(!foundChar){
+    try{ device.gatt.disconnect(); }catch(e){}
+    throw new Error(services.length
+      ? "Printer terhubung tapi jalur tulis data tidak ditemukan (service: " + services.map(s=>s.uuid.slice(4,8)).join(", ") + ")."
+      : "Printer terhubung tapi tidak ada service yang dikenali. Kemungkinan printer hanya Bluetooth Classic (bukan BLE), atau memakai UUID yang belum terdaftar.");
+  }
+  btCharacteristic = foundChar;
+  btConnected = true;
+  updatePrinterStatus();
+}
+async function ensurePrinter(){
+  if(btConnected && btCharacteristic && btDevice && btDevice.gatt.connected) return true;
+  if(!btDevice) return false;
+  try{ await attachPrinter(btDevice); return true; }catch(e){ return false; }
+}
+async function connectPrinter(){
+  if(!('bluetooth' in navigator)){
+    showMessage("Bluetooth Web API tidak tersedia. Pastikan pakai HP Android dengan browser Chrome/Edge, dan halaman ini dibuka lewat alamat https (bukan file lokal).");
+    return;
+  }
+  try{
+    const device = await navigator.bluetooth.requestDevice({
+      acceptAllDevices: true,
+      optionalServices: PRINTER_SERVICE_UUIDS
+    });
+    btDevice = device;
+    device.addEventListener('gattserverdisconnected', ()=>{
+      btConnected = false;
+      btCharacteristic = null;
+      updatePrinterStatus();
+    });
+    await attachPrinter(device);
+    showMessage("Berhasil terhubung ke " + (device.name || "printer") + ". Coba tombol Tes Cetak untuk memastikan printer jalan.");
+  }catch(err){
+    btConnected = false;
+    btCharacteristic = null;
+    updatePrinterStatus();
+    if(err.name !== "NotFoundError"){ // NotFoundError = user membatalkan pilihan device
+      showMessage("Gagal menyambungkan printer: " + err.message);
+    }
+  }
+}
+async function disconnectPrinter(){
+  if(btDevice && btDevice.gatt && btDevice.gatt.connected){
+    btDevice.gatt.disconnect();
+  }
+  btConnected = false;
+  btCharacteristic = null;
+  updatePrinterStatus();
+}
+
+// Printer thermal memakai code page 1-byte, bukan UTF-8: karakter di luar ASCII jadi sampah, jadi disederhanakan.
+function toPrinterText(str){
+  return String(str).normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .replace(/[\u2018\u2019]/g,"'").replace(/[\u201C\u201D]/g,'"').replace(/[\u2013\u2014]/g,"-")
+    .replace(/[\u00A0\u2007\u202F]/g," ").replace(/[^\x20-\x7E\n]/g,"?");
+}
+function encodeText(str){ return new TextEncoder().encode(toPrinterText(str)); }
+function concatBytes(arrays){
+  let total = 0;
+  arrays.forEach(a=>total+=a.length);
+  const out = new Uint8Array(total);
+  let offset = 0;
+  arrays.forEach(a=>{ out.set(a, offset); offset += a.length; });
+  return out;
+}
+function wrapText(str, width){
+  const words = str.split(" ");
+  const lines = [];
+  let cur = "";
+  words.forEach(w=>{
+    if((cur + " " + w).trim().length > width){
+      if(cur) lines.push(cur.trim());
+      cur = w;
+    }else{
+      cur = (cur + " " + w).trim();
+    }
+  });
+  if(cur) lines.push(cur.trim());
+  return lines.length ? lines : [""];
+}
+function padRow(left, right, width){
+  const space = Math.max(1, width - left.length - right.length);
+  return left + " ".repeat(space) + right;
+}
+function dashes(width){ return "-".repeat(width); }
+
+function buildEscPosBytes(data, type){
+  const width = config.printer.paperWidth===80 ? 48 : 32;
+  const CMD = {
+    init: new Uint8Array([0x1B,0x40]),
+    alignCenter: new Uint8Array([0x1B,0x61,0x01]),
+    alignLeft: new Uint8Array([0x1B,0x61,0x00]),
+    boldOn: new Uint8Array([0x1B,0x45,0x01]),
+    boldOff: new Uint8Array([0x1B,0x45,0x00]),
+    bigOn: new Uint8Array([0x1D,0x21,0x11]),
+    bigOff: new Uint8Array([0x1D,0x21,0x00]),
+    cut: new Uint8Array([0x1D,0x56,0x01])
+  };
+  const parts = [CMD.init];
+
+  function line(text=""){ parts.push(encodeText(text + "\n")); }
+  function center(text){ wrapText(text,width).forEach(l=>{ parts.push(CMD.alignCenter); line(l); }); parts.push(CMD.alignLeft); }
+
+  if(type==="test"){
+  parts.push(CMD.alignCenter, CMD.boldOn); line("TES PRINTER"); parts.push(CMD.boldOff, CMD.alignLeft);
+  line(dashes(width));
+  line("1234567890".repeat(5).slice(0, width));
+  line("ABC abc Rp17.000 - OK");
+  line("Cafe " + "\u00e9 \u2013 test karakter");
+  line(dashes(width));
+  parts.push(CMD.alignCenter); line("Printer siap dipakai"); parts.push(CMD.alignLeft);
+  line(""); line(""); line("");
+  } else if(type!=="kitchen"){
+  // ---- STRUK PELANGGAN ----
+  parts.push(CMD.alignCenter, CMD.boldOn); center(data.shop); parts.push(CMD.boldOff);
+  center(data.addr);
+  line(dashes(width));
+  parts.push(CMD.alignLeft);
+  line(padRow("No. Antrian:", "", width));
+  parts.push(CMD.alignCenter, CMD.bigOn); line(data.queue); parts.push(CMD.bigOff, CMD.alignLeft);
+  line(padRow("Nama", data.name.slice(0, width-8), width));
+  line(padRow("Tanggal", data.date, width));
+  line(dashes(width));
+  order.forEach(o=>{
+    const priceStr = rupiah(o.unitPrice*o.qty);
+    wrapText(`${o.qty}x ${o.label}`, width - priceStr.length - 1).forEach((l,idx)=>{
+      line(idx===0 ? padRow(l, priceStr, width) : l);
+    });
+    if(o.detail) line("  " + o.detail);
+  });
+  line(dashes(width));
+  parts.push(CMD.boldOn); line(padRow("TOTAL", data.total, width)); parts.push(CMD.boldOff);
+  line(dashes(width));
+  center("Terima kasih!");
+  line(""); line(""); line("");
+  } else {
+  // ---- CATATAN DAPUR ----
+  line(dashes(width));
+  parts.push(CMD.boldOn); center("CATATAN DAPUR"); parts.push(CMD.boldOff);
+  center("Siapkan Pesanan");
+  line(dashes(width));
+  parts.push(CMD.alignLeft);
+  line(padRow("No. Antrian", data.queue, width));
+  line(padRow("Nama", data.name.slice(0, width-8), width));
+  line(dashes(width));
+  order.forEach(o=>{
+    wrapText(`${o.qty}x ${o.label}`, width).forEach(l=>line(l));
+    if(o.detail) line("  " + o.detail);
+  });
+  line(dashes(width));
+  parts.push(CMD.boldOn); line(padRow("TOTAL", data.total, width)); parts.push(CMD.boldOff);
+  line(dashes(width));
+  line(""); line(""); line("");
+  }
+
+  if(config.printer.autoCut) parts.push(CMD.cut);
+
+  return concatBytes(parts);
+}
+
+async function sendToBluetoothPrinter(data, type){
+  if(!btCharacteristic || !btDevice || !btDevice.gatt.connected) throw new Error("Printer belum terhubung.");
+  const ch = btCharacteristic;
+  const bytes = buildEscPosBytes(data, type);
+  const chunkSize = 20; // aman untuk MTU BLE standar (23 byte)
+  const wait = ms => new Promise(r=>setTimeout(r, ms));
+  for(let i=0; i<bytes.length; i+=chunkSize){
+    const chunk = bytes.slice(i, i+chunkSize);
+    if(ch.properties.write && ch.writeValueWithResponse){
+      await ch.writeValueWithResponse(chunk);
+    }else if(ch.properties.writeWithoutResponse){
+      await ch.writeValueWithoutResponse(chunk);
+      await wait(30);
+    }else{
+      await ch.writeValue(chunk);
+    }
+  }
+}
+// Cetak lewat aplikasi RawBT (Android): printer Bluetooth Classic dipasangkan di RawBT, web hanya mengirim data cetak.
+function bytesToBase64(bytes){
+  let bin = "";
+  for(let i=0;i<bytes.length;i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin);
+}
+function printViaRawBT(data, type){
+  const b64 = bytesToBase64(buildEscPosBytes(data, type));
+  window.location.href = "intent:base64," + b64 + "#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;end;";
+}
+async function testPrint(){
+  if(btDevice || btConnected){
+    if(!(await ensurePrinter())){ showMessage("Printer BLE terputus. Tekan Sambungkan Printer lagi."); return; }
+    try{ await sendToBluetoothPrinter({}, "test"); toast("Tes cetak terkirim"); }
+    catch(err){ showMessage("Tes cetak gagal: " + err.message); }
+    return;
+  }
+  if(config.printer.useRawBT !== false){ printViaRawBT({}, "test"); return; }
+  showMessage("Aktifkan opsi RawBT atau sambungkan printer BLE dulu.");
+}
+
+/* ============ SETTINGS ============ */
+function openSettings(){
+  renderSettingsBody();
+  document.getElementById("settingsOverlay").classList.add("open");
+}
+function closeSettings(){
+  document.getElementById("settingsOverlay").classList.remove("open");
+}
+function renderSettingsBody(){
+  const el = document.getElementById("settingsBody");
+  el.innerHTML = `
+    <div class="settings-section">
+      <h3>Printer Bluetooth (58mm)</h3>
+      <p style="font-size:12.5px;color:#5a8b93;margin:0 0 10px;" id="printerStatusText">Memeriksa status...</p>
+      <div class="action-row" style="margin-bottom:10px;">
+        <button class="btn-print" style="flex:1" onclick="connectPrinter()">🔗 Sambungkan Printer</button>
+        <button class="btn-clear" style="flex:1" onclick="disconnectPrinter()">Putuskan</button>
+      </div>
+      <div class="action-row" style="margin:0 0 10px;"><button class="btn-clear" onclick="testPrint()">🖨 Tes Cetak (cek printer)</button></div>
+      <div class="setting-row" style="margin-bottom:6px;">
+        <span style="font-size:13px;flex:1;">Ukuran kertas</span>
+        <select id="set-paper-width" style="padding:7px 9px;border:1px solid var(--line);border-radius:7px;font-size:13.5px;" onchange="config.printer.paperWidth=Number(this.value)">
+          <option value="58" ${config.printer.paperWidth===58?"selected":""}>58mm</option>
+          <option value="80" ${config.printer.paperWidth===80?"selected":""}>80mm</option>
+        </select>
+      </div>
+      <label class="setting-row" style="cursor:pointer;">
+        <input type="checkbox" id="set-auto-cut" ${config.printer.autoCut?"checked":""} onchange="config.printer.autoCut=this.checked">
+        <span style="font-size:13px;">Printer punya pemotong kertas otomatis</span>
+      </label>
+      <label class="setting-row" style="cursor:pointer;">
+        <input type="checkbox" id="set-use-bt" ${config.printer.useBluetooth?"checked":""} onchange="config.printer.useBluetooth=this.checked">
+        <span style="font-size:13px;">Cetak langsung ke printer Bluetooth BLE (bila terhubung)</span>
+      </label>
+      <label class="setting-row" style="cursor:pointer;">
+        <input type="checkbox" id="set-use-rawbt" ${config.printer.useRawBT!==false?"checked":""} onchange="config.printer.useRawBT=this.checked">
+        <span style="font-size:13px;">Cetak lewat aplikasi RawBT (printer Bluetooth Classic, misal R58D)</span>
+      </label>
+      <p class="hint-small" style="color:#5a8b93;margin:6px 0 0;">RawBT: pasang aplikasi RawBT dari Play Store, pasangkan printer di Bluetooth HP, pilih printernya di RawBT dan atur kertas 58mm. Kalau opsi ini dimatikan, tombol cetak membuka dialog cetak biasa HP.</p>
+      <p class="hint-small" style="color:#5a8b93;margin-top:8px;">Printer harus tipe Bluetooth BLE (bukan hanya Bluetooth Classic/SPP). Sambungkan lewat tombol di sini, jangan lewat menu Bluetooth bawaan HP. Cetak Bluetooth langsung hanya jalan di Android + Chrome/Edge, dan halaman harus dibuka lewat alamat https (bukan file di HP). Kalau tidak didukung, tombol cetak otomatis memakai dialog cetak biasa dari HP.</p>
+    </div>
+
+    <div class="settings-section">
+      <h3>Nomor Antrian</h3>
+      <p style="font-size:12.5px;color:#5a8b93;margin:0 0 10px;">Nomor antrian saat ini: <b id="set-current-queue">-</b>. Reset akan mengembalikan nomor ke 00 (biasanya dipakai saat mulai buka warung / ganti hari).</p>
+      <button class="add-row" style="border-color:#c94848;color:#c94848;" onclick="resetQueueFromSettings()">↺ Reset Nomor Antrian ke 00</button>
+    </div>
+
+    <div class="settings-section">
+      <h3>Info Warung</h3>
+      <div class="setting-row"><input type="text" id="set-shopName" value="${esc(config.shopName)}" placeholder="Nama warung"></div>
+      <div class="setting-row"><input type="text" id="set-shopAddr" value="${esc(config.shopAddress)}" placeholder="Alamat"></div>
+    </div>
+
+    <div class="settings-section">
+      <h3>Bakso — Harga Dasar</h3>
+      <div class="setting-row">
+        <input type="text" id="set-bakso-name" value="${esc(config.bakso.name)}">
+        <input type="number" id="set-bakso-price" value="${config.bakso.price}">
+      </div>
+      <h3>Topping Bakso</h3>
+      <div id="topping-bakso-list"></div>
+      <button class="add-row" onclick="addToppingRow('bakso')">+ Tambah Topping Bakso</button>
+    </div>
+
+    <div class="settings-section">
+      <h3>Mie Ayam — Harga Dasar</h3>
+      <div class="setting-row">
+        <input type="text" id="set-mieayam-name" value="${esc(config.mieayam.name)}">
+        <input type="number" id="set-mieayam-price" value="${config.mieayam.price}">
+      </div>
+      <h3>Topping Mie Ayam</h3>
+      <div id="topping-mieayam-list"></div>
+      <button class="add-row" onclick="addToppingRow('mieayam')">+ Tambah Topping Mie Ayam</button>
+    </div>
+
+    <div class="settings-section">
+      <h3>Menu Lainnya</h3>
+      <div id="lainnya-list"></div>
+      <button class="add-row" onclick="addLainnyaRow()">+ Tambah Menu Lainnya</button>
+    </div>
+  `;
+  renderToppingRows('bakso');
+  renderToppingRows('mieayam');
+  renderLainnyaRows();
+  const q = loadQueueState();
+  document.getElementById("set-current-queue").textContent = q.counter>0 ? String(q.counter).padStart(2,"0") : "00";
+  updatePrinterStatus();
+}
+function resetQueueFromSettings(){
+  showConfirm("Yakin mau reset nomor antrian ke 00? Pesanan yang sedang berjalan tidak akan terhapus, tapi nomor antriannya akan mulai dari awal lagi.", function(){
+    localStorage.setItem(QUEUE_KEY, JSON.stringify({date: todayStr(), counter: 0}));
+    currentQueueNumber = null;
+    if(order.length) assignQueue(); else updateQueueUI();
+    document.getElementById("set-current-queue").textContent = "00";
+    renderOrder();
+  });
+}
+
+/* ============ CUSTOM CONFIRM DIALOG ============ */
+let pendingConfirmCallback = null;
+function showConfirm(message, onYes){
+  document.getElementById("confirmMsg").textContent = message;
+  pendingConfirmCallback = onYes;
+  document.getElementById("confirmOverlay").classList.add("open");
+}
+function closeConfirm(result){
+  document.getElementById("confirmOverlay").classList.remove("open");
+  const cb = pendingConfirmCallback;
+  pendingConfirmCallback = null;
+  if(result && typeof cb === "function") cb();
+}
+function showMessage(text){
+  document.getElementById("msgText").textContent = text;
+  document.getElementById("msgOverlay").classList.add("open");
+}
+function closeMessage(){
+  document.getElementById("msgOverlay").classList.remove("open");
+}
+function renderToppingRows(key){
+  const list = document.getElementById(`topping-${key}-list`);
+  list.innerHTML = config[key].toppings.map((t,i)=>`
+    <div class="setting-row">
+      <input type="text" value="${esc(t.name)}" onchange="config.${key}.toppings[${i}].name=this.value">
+      <input type="number" value="${t.price}" onchange="config.${key}.toppings[${i}].price=Number(this.value)">
+      <button class="del" onclick="removeToppingRow('${key}',${i})">✕</button>
+    </div>
+  `).join("");
+}
+function addToppingRow(key){
+  config[key].toppings.push({name:"Topping Baru", price:0});
+  renderToppingRows(key);
+}
+function removeToppingRow(key,i){
+  config[key].toppings.splice(i,1);
+  renderToppingRows(key);
+}
+function renderLainnyaRows(){
+  const list = document.getElementById("lainnya-list");
+  list.innerHTML = config.lainnya.map((item,i)=>`
+    <div class="setting-row">
+      <input type="text" value="${esc(item.name)}" onchange="config.lainnya[${i}].name=this.value">
+      <input type="number" value="${item.price}" onchange="config.lainnya[${i}].price=Number(this.value)">
+      <button class="del" onclick="removeLainnyaRow(${i})">✕</button>
+    </div>
+  `).join("");
+}
+function addLainnyaRow(){
+  config.lainnya.push({name:"Menu Baru", price:0});
+  renderLainnyaRows();
+}
+function removeLainnyaRow(i){
+  config.lainnya.splice(i,1);
+  renderLainnyaRows();
+}
+function saveSettingsAndClose(){
+  config.shopName = document.getElementById("set-shopName").value.trim() || DEFAULT_CONFIG.shopName;
+  config.shopAddress = document.getElementById("set-shopAddr").value.trim() || DEFAULT_CONFIG.shopAddress;
+  config.bakso.name = document.getElementById("set-bakso-name").value.trim() || "Bakso";
+  config.bakso.price = Number(document.getElementById("set-bakso-price").value)||0;
+  config.mieayam.name = document.getElementById("set-mieayam-name").value.trim() || "Mie Ayam";
+  config.mieayam.price = Number(document.getElementById("set-mieayam-price").value)||0;
+  saveConfig();
+  closeSettings();
+  renderBaksoMenu();
+  renderMieAyamMenu();
+  renderLainnyaMenu();
+}
+
+/* ============ INIT ============ */
+function init(){
+  renderBaksoMenu();
+  renderMieAyamMenu();
+  renderLainnyaMenu();
+  renderOrder();
+  updateQueueUI();
+}
+init();
+</script>
+</body>
+</html>
